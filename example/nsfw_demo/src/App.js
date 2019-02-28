@@ -1,7 +1,7 @@
 import React, { Component } from 'react'
 import logo from './logo.svg'
 import ir from './ir.svg'
-import tflogo from './tflogo.jpg'
+import tflogo from './tflogo.png'
 import './App.css'
 import * as nsfwjs from 'nsfwjs'
 import Dropzone from 'react-dropzone'
@@ -23,6 +23,7 @@ class App extends Component {
     droppedImageStyle: { opacity: 0.4 },
     blurNSFW: true
   }
+
   componentDidMount() {
     // hovercard
     this.drop = new Drop({
@@ -36,13 +37,13 @@ class App extends Component {
     });
 
     // Load model from public
-    nsfwjs.load('/model/').then(model => {
-      this.setState({
-        model,
-        titleMessage: 'Drag and drop an image to check',
-        message: 'Ready to Classify'
-      })
-    })
+    // nsfwjs.load('/model/').then(model => {
+    //   this.setState({
+    //     model,
+    //     titleMessage: 'Drag and drop an image to check',
+    //     message: 'Ready to Classify'
+    //   })
+    // })
   }
 
   _refTarget = (ref) => {
@@ -58,17 +59,18 @@ class App extends Component {
     return new Promise(resolve => setTimeout(resolve, ms))
   }
 
-  detectBlurStatus = (className, blurNSFW = this.state.blurNSFW) => {
-    let droppedImageStyle = clean
+  detectBlurStatus = (className) => {
+    const { blurNSFW } = this.state
     if (blurNSFW) {
       switch (className) {
         case 'Hentai':
         case 'Porn':
         case 'Sexy':
-          droppedImageStyle = blurred
+          return blurred
+        default:
+          return clean
       }
     }
-    return droppedImageStyle
   }
 
   checkContent = async () => {
@@ -129,11 +131,12 @@ class App extends Component {
   }
 
   blurChange = checked => {
+    const { predictions } = this.state
     // Check on blurring
     let droppedImageStyle = clean
-    if (this.state.predictions.length > 0) {
+    if (predictions.length > 0) {
       droppedImageStyle = this.detectBlurStatus(
-        this.state.predictions[0].className,
+        predictions[0].className,
         checked
       )
     }
@@ -155,20 +158,29 @@ class App extends Component {
   }
 
   render() {
+    const {
+      blurNSFW,
+      droppedImageStyle,
+      graphic,
+      message,
+      titleMessage,
+    } = this.state
     return (
       <div className="App">
         <header>
-          <img src={logo} className="App-logo" alt="logo" />
-          <h1>Client-side indecent content checking</h1>
-          <div className="snippet">
-            <p>Powered by</p>
-            <a href="https://js.tensorflow.org/" targe="_blank">
-              <img src={tflogo} id="tflogo" alt="TensorflowJS Logo" />
-            </a>
+          <div className="test">
+            <img src={logo} className="App-logo" alt="logo" />
+            <h1>Client-side indecent content checking</h1>
+            <div className="snippet">
+              <p>Powered by</p>
+              <a href="https://js.tensorflow.org/" rel="noopener noreferrer" target="_blank">
+                <img src={tflogo} id="tflogo" alt="TensorflowJS Logo" />
+              </a>
+            </div>
           </div>
         </header>
         <main>
-          <p id="topMessage">{this.state.titleMessage}</p>
+          <p id="topMessage">{titleMessage}</p>
           <div>
             <Dropzone
               accept="image/jpeg, image/png, image/gif"
@@ -176,8 +188,8 @@ class App extends Component {
               onDrop={this.onDrop.bind(this)}
             >
               <img
-                src={this.state.graphic}
-                style={this.state.droppedImageStyle}
+                src={graphic}
+                style={droppedImageStyle}
                 alt="drop your file here"
                 className="dropped-photo"
                 ref="dropped"
@@ -197,17 +209,17 @@ class App extends Component {
                     <h3>
                       Ways to Help!
                     </h3>
-                    <p>
-                      <ul>
-                        <li>
-                          🌟<a href="https://github.com/alexkimxyz/nsfw_data_scrapper" target="_blank">Contribute to the Data Scraper</a> - Noticed any common misclassifications? Just PR a subreddit that represents those misclassifications.  Future models will be smarter!
-                        </li>
-                        <li>
-                          🌟<a href="https://github.com/gantman/nsfw_model" target="_blank">Contribute to the Trainer</a> - The algorithm is public. Advancements here help NSFW JS and other projects!
-                        </li>
-                      </ul>
-                      <a href="https://medium.freecodecamp.org/machine-learning-how-to-go-from-zero-to-hero-40e26f8aa6da" target="_blank"><strong>Learn more about how Machine Learning works!</strong></a>
-                    </p>
+                    <ul>
+                      <li>
+                        <span aria-label="star" role="img">🌟</span>
+                        <a href="https://github.com/alexkimxyz/nsfw_data_scrapper" rel="noopener noreferrer" target="_blank">Contribute to the Data Scraper</a> - Noticed any common misclassifications? Just PR a subreddit that represents those misclassifications.  Future models will be smarter!
+                      </li>
+                      <li>
+                        <span aria-label="star" role="img">🌟</span>
+                        <a href="https://github.com/gantman/nsfw_model" rel="noopener noreferrer" target="_blank">Contribute to the Trainer</a> - The algorithm is public. Advancements here help NSFW JS and other projects!
+                      </li>
+                    </ul>
+                    <a href="https://medium.freecodecamp.org/machine-learning-how-to-go-from-zero-to-hero-40e26f8aa6da" target="_blank"><strong>Learn more about how Machine Learning works!</strong></a>
                   </div>
                 </div>
               </div>
@@ -217,14 +229,14 @@ class App extends Component {
                   onColor="#e79f23"
                   offColor="#000"
                   onChange={this.blurChange}
-                  checked={this.state.blurNSFW}
+                  checked={blurNSFW}
                 />
               </div>
             </div>
           </div>
           {this._renderSpinner()}
           <div id="results">
-            <p>{this.state.message}</p>
+            <p>{message}</p>
             {this._renderPredictions()}
           </div>
         </main>
